@@ -7,11 +7,11 @@ const searchInfo = (req) => {
         let modSql = "select passWord from userInfo where userName='"+req.userName+"'";
         connectionPool.getConnection((err,db) => {
             if(err) {
-               reject(err)
+                reject(err)
             }else {
                 db.query(modSql,(err,rows) => {
                     if(err) {
-                       reject(err)
+                        reject(err)
                     }else {
                         resolve(JSON.parse(JSON.stringify(rows)))
                     }
