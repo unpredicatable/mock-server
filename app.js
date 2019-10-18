@@ -20,7 +20,6 @@ connectionPool.getConnection((err,db) => {
         console.log('CONNECTION SUCCESS')
     }
 })
-
 app.use(cors());
 app.use(bodyParser())
 
@@ -29,4 +28,4 @@ const user_router = require('./routes/api/user_router')
 app.use(user_router.routes()).use(user_router.allowedMethods());
 
 app.listen(8888)
-console.log('demo in run ')
+console.log('mock-server is running')

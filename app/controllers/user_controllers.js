@@ -1,7 +1,8 @@
 const query = require('../../query')
 const passport = require('../utils/passport')
+const log = require('../log/index')
+
 const get = async (ctx, next) => {
-    console.log('ctx',ctx)
     ctx.status = 200;
     ctx.body = {
         msg: 'get request!!',
@@ -26,34 +27,33 @@ const login = async (ctx ,next) => {
     const sql = "select passWord from userInfo where userName='"+req.userName+"'";
     // 获取用户的 userId
     const result = await query.queryData(req,sql);
-    if (!result) {
+    if (result.length === 0) {
         ctx.status = 200;
         ctx.body = {
-            code: 0,
-            msg: 'account or password error!',
+            code: 1,
+            msg: '账号或密码错误!',
             data:false
         }
         return;
     }
     const match = await passport.validate(req.passWord , result[0].passWord)
-    // result.length && result.map((cur,index) => {
-    //     if(cur.passWord == req.passWord){
-    //         match = true
-    //     }
-    // })
     ctx.status = 200;
     if (match) {
+        const getUserId = "select * from members where fullName='" + req.userName+"'"
+        const userId = await query.queryData(req, getUserId)
+        log.loginLog(req.userName)
         ctx.body = {
-            code: 1,
-            msg: 'login success',
-            data:true
+            code: 0,
+            msg: '登陆成功',
+            data:true,
+            userInfo: userId || []
         }
         return;
     }
 
     ctx.body = {
-        code: 0,
-        msg: 'account or password error!'
+        code: 1,
+        msg: '账号或密码错误!'
     }
 }
 
@@ -61,36 +61,43 @@ const register = async (ctx,next) => {
     const req = ctx.request.body
     const hash = await passport.encrypt(req.passWord)
     let sql = "select * from userInfo where userName='"+req.userName+"'";
-    let uid = 20190901+ new Date().getTime()
+    let uid = 20190901+ new Date().getTime() || ''
+    let userName = req.userName || ''
+    let tel = req.tel || ''
+    let email = req.email || ''
     const result = await  query.queryData(req,sql)
     if(result.length > 0) {
         ctx.status = 200;
         ctx.body = {
-            code: 0,
-            msg: 'userName has been already!',
+            code: 1,
+            msg: '注册失败，用户名已被注册!',
             data:false
         }
         return
     }else {
-        const sql = "insert into userInfo set uid='"+uid+"'"+",userName='"+req.userName +"'"+",passWord='"+hash+"'"+",tel='"+req.tel+"'"+",email='"+req.email+"'"
+        const sql = "insert into userInfo set uid='"+uid+"'"+",userName='"+userName +"'"+",passWord='"+hash+"'"+",tel='"+tel+"'"+",email='"+email+"'"
         const registResult = await query.queryData(req,sql)
         if(registResult.insertId){
-            ctx.status = 200;
-            ctx.body = {
-                code: 1,
-                msg: 'insert successfully!!',
-                data: true
+            // 基本信息写入members基本表
+            const baseInfoSql = "insert into members set uid='"+uid+"'"+",fullName='"+userName +"'"+",email='"+email+"'"
+            const baseInserResult = await query.queryData(req,baseInfoSql)
+            if (baseInserResult.insertId) {
+                ctx.status = 200;
+                ctx.body = {
+                    code: 0,
+                    msg: '注册成功!',
+                    data: true
+                }
+                return
             }
-            return
         }
     }
     ctx.body = {
-        code: 0,
-        msg: 'insert fail!'
+        code: 1,
+        msg: '注册失败!'
     };
 
 }
-
 
 module.exports = {
     login,
