@@ -4,7 +4,7 @@
  */
 const Router = require('koa-router')
 const router = new Router()
-const projects_controller = require('../../controllers/projects_controllers')
+const projects_controller = require('../../app/controllers/projects_controllers')
 
 
 router.post('/create', projects_controller.create)

@@ -46,7 +46,7 @@ const login = async (ctx ,next) => {
             code: 0,
             msg: '登陆成功',
             data:true,
-            userInfo: userId || []
+            userInfo: userId[0] || {}
         }
         return;
     }
